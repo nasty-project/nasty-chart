@@ -1,0 +1,56 @@
+name: Release Chart
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Package and Publish Chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+
+      - name: Get version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "chart_version=${VERSION#v}" >> $GITHUB_OUTPUT
+
+      - name: Update chart versions
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.chart_version }}/" Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.version }}\"/" Chart.yaml
+
+      - name: Package chart
+        run: helm package . -d .releases
+
+      - name: Push to GHCR (OCI)
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+          helm push .releases/nasty-csi-driver-${{ steps.version.outputs.chart_version }}.tgz \
+            oci://ghcr.io/nasty-project/charts
+
+      - name: Push to Docker Hub (OCI)
+        run: |
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | helm registry login registry-1.docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          helm push .releases/nasty-csi-driver-${{ steps.version.outputs.chart_version }}.tgz \
+            oci://registry-1.docker.io/${{ secrets.DOCKERHUB_USERNAME }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: .releases/*.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
