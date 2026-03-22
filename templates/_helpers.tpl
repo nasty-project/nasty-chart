@@ -254,6 +254,9 @@ parameters:
   csi.storage.k8s.io/node-stage-secret-namespace: {{ $sc.smbCredentialsSecret.namespace | default $.Release.Namespace | quote }}
   {{- end }}
   {{- end }}
+  {{- if and (eq $protocol "smb") $sc.smbUsername }}
+  smbUsername: {{ $sc.smbUsername | quote }}
+  {{- end }}
   {{- if $sc.parameters }}
   {{- range $key, $value := $sc.parameters }}
   {{- if kindIs "map" $value }}

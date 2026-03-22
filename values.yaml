@@ -551,6 +551,9 @@ storageClasses:
       name: ""
       # Namespace of the Secret (defaults to release namespace)
       namespace: ""
+    # SMB username for share ownership — the share directory will be
+    # chowned to this user so authenticated writes succeed.
+    smbUsername: ""
     # Additional parameters (ZFS properties, etc.)
     # Parameters can be specified flat or nested:
     #   Flat:   { "zfs.compression": "lz4" }
