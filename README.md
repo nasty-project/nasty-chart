@@ -40,14 +40,14 @@ helm install nasty-csi oci://registry-1.docker.io/bfenski/nasty-csi-driver \
   --create-namespace \
   --set nasty.url="wss://YOUR-NASTY-IP:443/api/current" \
   --set nasty.apiKey="YOUR-API-KEY" \
-  --set storageClasses[0].pool="YOUR-POOL-NAME" \
+  --set storageClasses[0].filesystem="YOUR-FS-NAME" \
   --set storageClasses[0].server="YOUR-NASTY-IP"
 ```
 
 Replace:
 - `YOUR-NASTY-IP` - NASty server IP address
 - `YOUR-API-KEY` - API key from NASty settings
-- `YOUR-POOL-NAME` - ZFS pool name (e.g., `tank`, `storage`)
+- `YOUR-FS-NAME` - Filesystem name (e.g., `tank`, `storage`)
 
 ### Installation from Local Chart
 
@@ -57,7 +57,7 @@ If you've cloned the repository, you can install from the local chart:
 helm install nasty-csi ./charts/nasty-csi-driver -n kube-system \
   --set nasty.url="wss://YOUR-NASTY-IP:443/api/current" \
   --set nasty.apiKey="YOUR-API-KEY" \
-  --set storageClasses[0].pool="YOUR-POOL-NAME" \
+  --set storageClasses[0].filesystem="YOUR-FS-NAME" \
   --set storageClasses[0].server="YOUR-NASTY-IP"
 ```
 
@@ -76,7 +76,7 @@ storageClasses:
   - name: nasty-nfs
     enabled: true
     protocol: nfs
-    pool: "tank"
+    filesystem: "tank"
     server: "YOUR-NASTY-IP"
     # Optional: specify parent dataset (must exist on NASty)
     # parentDataset: "k8s-volumes"
@@ -111,7 +111,7 @@ helm install nasty-csi oci://registry-1.docker.io/bfenski/nasty-csi-driver \
   --create-namespace \
   --set nasty.url="wss://YOUR-NASTY-IP:443/api/current" \
   --set nasty.apiKey="your-api-key" \
-  --set storageClasses[0].pool="YOUR-POOL-NAME" \
+  --set storageClasses[0].filesystem="YOUR-FS-NAME" \
   --set storageClasses[0].server="YOUR-NASTY-IP"
 ```
 
@@ -124,7 +124,7 @@ helm install nasty-csi oci://registry-1.docker.io/bfenski/nasty-csi-driver \
   --set nasty.url="wss://YOUR-NASTY-IP:443/api/current" \
   --set nasty.apiKey="your-api-key" \
   --set storageClasses[1].enabled=true \
-  --set storageClasses[1].pool="YOUR-POOL-NAME" \
+  --set storageClasses[1].filesystem="YOUR-FS-NAME" \
   --set storageClasses[1].server="YOUR-NASTY-IP"
 ```
 
@@ -139,7 +139,7 @@ helm install nasty-csi oci://registry-1.docker.io/bfenski/nasty-csi-driver \
   --set nasty.url="wss://YOUR-NASTY-IP:443/api/current" \
   --set nasty.apiKey="your-api-key" \
   --set storageClasses[2].enabled=true \
-  --set storageClasses[2].pool="YOUR-POOL-NAME" \
+  --set storageClasses[2].filesystem="YOUR-FS-NAME" \
   --set storageClasses[2].server="YOUR-NASTY-IP"
 ```
 
@@ -171,7 +171,7 @@ Each GitHub release includes a pre-rendered manifest (`nasty-csi-driver-<version
 | `name` | StorageClass name (required) | — |
 | `protocol` | Protocol: `nfs`, `nvmeof`, or `iscsi` (required) | — |
 | `enabled` | Create this StorageClass | `true` |
-| `pool` | ZFS pool name on NASty (required) | `"storage"` |
+| `filesystem` | Filesystem name on NASty (required) | `"storage"` |
 | `server` | NASty server IP/hostname (required) | `""` |
 | `parentDataset` | Parent dataset (optional, must exist) | `""` |
 | `isDefault` | Set as default storage class | `false` |
@@ -222,8 +222,8 @@ See [FEATURES.md](../../docs/FEATURES.md) for complete ZFS property documentatio
 
 **Important Note on `parentDataset`:**
 - If `parentDataset` is specified, it must already exist on NASty
-- The full path would be `pool/parentDataset` (e.g., `tank/k8s-volumes`)
-- If empty or omitted, volumes will be created directly in the pool
+- The full path would be `filesystem/parentDataset` (e.g., `tank/k8s-volumes`)
+- If empty or omitted, volumes will be created directly in the filesystem
 
 #### Multiple Storage Classes per Protocol
 
@@ -233,13 +233,13 @@ To create multiple classes of the same protocol (e.g., Delete + Retain NFS class
 storageClasses:
   - name: nasty-csi-nfs
     protocol: nfs
-    pool: "tank"
+    filesystem: "tank"
     server: "10.0.0.1"
     reclaimPolicy: Delete
 
   - name: nasty-csi-nfs-retain
     protocol: nfs
-    pool: "tank"
+    filesystem: "tank"
     server: "10.0.0.1"
     reclaimPolicy: Retain
     deleteStrategy: retain
@@ -253,7 +253,7 @@ storageClasses:
 | `snapshots.volumeSnapshotClass.create` | Create VolumeSnapshotClass resources | `true` |
 | `snapshots.volumeSnapshotClass.deletionPolicy` | Deletion policy (Delete/Retain) | `Delete` |
 | `snapshots.detached.enabled` | Enable detached snapshot classes | `false` |
-| `snapshots.detached.parentDataset` | Parent dataset for detached snapshots | `{pool}/csi-detached-snapshots` |
+| `snapshots.detached.parentDataset` | Parent dataset for detached snapshots | `{filesystem}/csi-detached-snapshots` |
 | `snapshots.detached.deletionPolicy` | Deletion policy for detached snapshots | `Delete` |
 
 **Prerequisites:** VolumeSnapshot CRDs must be installed before enabling snapshots:
@@ -388,7 +388,7 @@ To use ZFS native encryption, set the encryption parameters in your StorageClass
 storageClasses:
   - name: nasty-csi-nfs
     protocol: nfs
-    pool: "tank"
+    filesystem: "tank"
     server: "10.0.0.1"
     encryption: "true"
     encryptionGenerateKey: "true"  # NASty manages the key
@@ -400,7 +400,7 @@ For passphrase-based encryption, create a Secret and reference it:
 storageClasses:
   - name: nasty-csi-nfs
     protocol: nfs
-    pool: "tank"
+    filesystem: "tank"
     server: "10.0.0.1"
     encryption: "true"
     parameters:
@@ -443,7 +443,7 @@ storageClasses:
   nfs:
     enabled: true
     name: nasty-csi-nfs
-    pool: "tank"
+    filesystem: "tank"
     server: "10.0.0.1"
     reclaimPolicy: Delete
   nvmeof:
@@ -459,7 +459,7 @@ storageClasses:
   - name: nasty-csi-nfs
     enabled: true
     protocol: nfs
-    pool: "tank"
+    filesystem: "tank"
     server: "10.0.0.1"
     reclaimPolicy: Delete
 ```
@@ -468,7 +468,7 @@ Key differences:
 - Each entry is a list item (starts with `- `)
 - `protocol` is now an explicit field (was the map key before)
 - Disabled protocols can simply be omitted instead of set to `enabled: false`
-- All other fields (`pool`, `server`, `reclaimPolicy`, `mountOptions`, `parameters`, etc.) stay exactly the same
+- All other fields (`filesystem`, `server`, `reclaimPolicy`, `mountOptions`, `parameters`, etc.) stay exactly the same
 
 #### Step 2: Update `--set` flags (if used instead of a values file)
 
@@ -477,7 +477,7 @@ If you use `--set` flags instead of a values file, update them to use array inde
 | Before | After |
 |--------|-------|
 | `--set storageClasses.nfs.enabled=true` | `--set storageClasses[0].enabled=true` |
-| `--set storageClasses.nfs.pool=tank` | `--set storageClasses[0].pool=tank` |
+| `--set storageClasses.nfs.filesystem=tank` | `--set storageClasses[0].filesystem=tank` |
 | `--set storageClasses.nfs.server=10.0.0.1` | `--set storageClasses[0].server=10.0.0.1` |
 | | `--set storageClasses[0].protocol=nfs` (new, required) |
 | | `--set storageClasses[0].name=nasty-csi-nfs` (new, required) |
@@ -545,7 +545,7 @@ kubectl logs -n kube-system -l app.kubernetes.io/component=controller -c csi-pro
 #### Volume Creation Failed: "zpool (parentDataset) does not exist"
 - The `parentDataset` value must point to an existing dataset on NASty
 - Either create the dataset on NASty first, or remove the `parentDataset` parameter
-- Example: If using `parentDataset: kubevols` and `pool: tank`, create `tank/kubevols` first
+- Example: If using `parentDataset: kubevols` and `filesystem: tank`, create `tank/kubevols` first
 
 #### Volume Mount Failed (NFS)
 - Verify NFS service is enabled on NASty

@@ -277,7 +277,7 @@ sidecars:
 # Storage class configuration
 # Each entry creates a Kubernetes StorageClass. You can have multiple classes
 # per protocol (e.g., two NFS classes with different reclaim policies).
-# Required fields per entry: name, protocol (nfs/nvmeof/iscsi), pool
+# Required fields per entry: name, protocol (nfs/nvmeof/iscsi), filesystem
 storageClasses:
   # NFS storage class
   - name: nasty-csi-nfs
@@ -285,12 +285,12 @@ storageClasses:
     protocol: nfs
     # Set as default storage class
     isDefault: false
-    # Storage pool name on NASty
-    pool: "storage"
+    # Filesystem name on NASty
+    filesystem: "storage"
     # NASty server IP/hostname for NFS mounts
     # Replace with your NASty server IP
     server: ""
-    # Optional: Parent dataset (defaults to pool name if not specified)
+    # Optional: Parent dataset (defaults to filesystem name if not specified)
     parentDataset: ""
     # Reclaim policy: Delete or Retain
     reclaimPolicy: Delete
@@ -361,8 +361,8 @@ storageClasses:
     enabled: false
     protocol: nvmeof
     isDefault: false
-    # Storage pool name on NASty
-    pool: "storage"
+    # Filesystem name on NASty
+    filesystem: "storage"
     # NASty server IP/hostname for NVMe-oF target
     server: ""
     # Optional: Parent dataset
@@ -439,8 +439,8 @@ storageClasses:
     enabled: false
     protocol: iscsi
     isDefault: false
-    # Storage pool name on NASty
-    pool: "storage"
+    # Filesystem name on NASty
+    filesystem: "storage"
     # NASty server IP/hostname for iSCSI target
     server: ""
     # Optional: Parent dataset
@@ -513,8 +513,8 @@ storageClasses:
     enabled: false
     protocol: smb
     isDefault: false
-    # Storage pool name on NASty
-    pool: "storage"
+    # Filesystem name on NASty
+    filesystem: "storage"
     # NASty server IP/hostname for SMB shares
     server: ""
     # Optional: Parent dataset
@@ -564,7 +564,7 @@ storageClasses:
   # - name: nasty-csi-nfs-retain
   #   enabled: true
   #   protocol: nfs
-  #   pool: "tank"
+  #   filesystem: "tank"
   #   server: "10.0.0.1"
   #   reclaimPolicy: Retain
   #   deleteStrategy: retain
@@ -592,7 +592,7 @@ snapshots:
     # When enabled, a separate "-snapshot-detached" class will be created
     enabled: false
     # Parent dataset for detached snapshots (optional)
-    # If not specified, defaults to {pool}/csi-detached-snapshots
+    # If not specified, defaults to {filesystem}/csi-detached-snapshots
     # Example: "tank/backups/csi-snapshots"
     parentDataset: ""
     # Deletion policy for detached snapshots
