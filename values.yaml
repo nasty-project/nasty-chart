@@ -309,6 +309,13 @@ storageClasses:
     # Compression algorithm for new subvolumes (e.g., "lz4", "zstd", "none")
     # If empty, inherits the filesystem default.
     compression: ""
+    # Tiering targets (bcachefs device group labels)
+    # These override filesystem-level defaults for volumes in this class.
+    # Use device group labels configured in NASty (e.g., "ssd", "hdd", "nvme").
+    # If empty, inherits the filesystem default.
+    foregroundTarget: ""   # Device/label for foreground writes
+    backgroundTarget: ""   # Device/label for background moves (recompression, tiering)
+    promoteTarget: ""      # Device/label to promote data to on read (cache tier)
     # Volume Name Templating:
     #   Go template for volume names (e.g., "{{ .PVCNamespace }}-{{ .PVCName }}")
     #   Available variables: .PVCName, .PVCNamespace, .PVName
