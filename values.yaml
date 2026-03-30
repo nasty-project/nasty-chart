@@ -8,16 +8,16 @@ nasty:
   # Format: wss://YOUR-NASTY-IP:PORT/api/current
   # Example: wss://nasty.example.com:443/api/current
   url: ""
-  
+
   # NASty API key
   # Generate in NASty settings
   apiKey: ""
-  
+
   # Name of existing secret containing NASty credentials
   # If set, url and apiKey above will be ignored
   # Secret should contain keys: 'url' and 'api-key'
   existingSecret: ""
-  
+
   # Skip TLS certificate verification
   # Set to true if NASty uses self-signed certificates
   # WARNING: Only enable this in trusted networks
@@ -49,17 +49,17 @@ csiDriverName: nasty.csi.io
 controller:
   # Number of controller replicas (should be 1 for leader election)
   replicas: 1
-  
+
   # Log verbosity level (0-5, higher = more verbose)
   # 0: Errors only
   # 2: Normal operation (default) - volume created/deleted messages
   # 4: Detailed operations - API calls, dataset queries
   # 5: Debug - request/response bodies, context dumps
   logLevel: 2
-  
+
   # Enable debug mode (sets DEBUG_CSI=true, equivalent to logLevel 4+)
   debug: false
-  
+
   # Metrics configuration
   metrics:
     # Enable Prometheus metrics endpoint
@@ -94,13 +94,15 @@ controller:
       relabelings: []
       # MetricRelabelings to apply to samples before ingestion
       metricRelabelings: []
-  
+
   # In-cluster web dashboard
   dashboard:
     # Enable the in-cluster web dashboard
     enabled: false
     # Port to expose dashboard on
     port: 2137
+    # Filesystem to scan for unmanaged volume discovery (optional)
+    filesystem: ""
     # Create a Service for the dashboard
     service:
       enabled: true
@@ -130,13 +132,13 @@ controller:
     limits:
       cpu: 200m
       memory: 200Mi
-  
+
   # Node selector for controller pod
   nodeSelector: {}
-  
+
   # Tolerations for controller pod
   tolerations: []
-  
+
   # Affinity for controller pod
   affinity: {}
 
@@ -148,17 +150,17 @@ node:
   # - K0s: /var/lib/k0s/kubelet
   # - OpenShift: /var/lib/kubelet
   kubeletPath: /var/lib/kubelet
-  
+
   # Log verbosity level (0-5, higher = more verbose)
   # 0: Errors only
   # 2: Normal operation (default) - volume created/deleted messages
   # 4: Detailed operations - API calls, staging details
   # 5: Debug - request/response bodies, context dumps
   logLevel: 2
-  
+
   # Enable debug mode (sets DEBUG_CSI=true, equivalent to logLevel 4+)
   debug: false
-  
+
   # Resource requests and limits for node plugin
   resources:
     requests:
@@ -167,16 +169,16 @@ node:
     limits:
       cpu: 200m
       memory: 200Mi
-  
+
   # Node selector for node pods
   nodeSelector: {}
-  
+
   # Tolerations for node pods
   tolerations: []
-  
+
   # Affinity for node pods
   affinity: {}
-  
+
   # NVMe-oF optimization settings
   # Skip redundant nvme discover before nvme connect.
   # All connection params (NQN, server, port, transport) are already known from volume context.
@@ -208,7 +210,7 @@ sidecars:
       limits:
         cpu: 300m
         memory: 300Mi
-  
+
   attacher:
     image:
       repository: registry.k8s.io/sig-storage/csi-attacher
@@ -221,7 +223,7 @@ sidecars:
       limits:
         cpu: 300m
         memory: 300Mi
-  
+
   resizer:
     image:
       repository: registry.k8s.io/sig-storage/csi-resizer
@@ -234,7 +236,7 @@ sidecars:
       limits:
         cpu: 300m
         memory: 300Mi
-  
+
   nodeDriverRegistrar:
     image:
       repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
@@ -247,7 +249,7 @@ sidecars:
       limits:
         cpu: 100m
         memory: 100Mi
-  
+
   snapshotter:
     image:
       repository: registry.k8s.io/sig-storage/csi-snapshotter
@@ -277,7 +279,7 @@ sidecars:
 # Storage class configuration
 # Each entry creates a Kubernetes StorageClass. You can have multiple classes
 # per protocol (e.g., two NFS classes with different reclaim policies).
-# Required fields per entry: name, protocol (nfs/nvmeof/iscsi), filesystem
+# Required fields per entry: name, protocol (nfs/nvmeof/iscsi/smb), filesystem, server
 storageClasses:
   # NFS storage class
   - name: nasty-csi-nfs
@@ -288,10 +290,7 @@ storageClasses:
     # Filesystem name on NASty
     filesystem: "storage"
     # NASty server IP/hostname for NFS mounts
-    # Replace with your NASty server IP
     server: ""
-    # Optional: Parent dataset (defaults to filesystem name if not specified)
-    parentDataset: ""
     # Reclaim policy: Delete or Retain
     reclaimPolicy: Delete
     # Volume binding mode: Immediate or WaitForFirstConsumer
@@ -307,6 +306,9 @@ storageClasses:
     #   - "delete" (default): Volume is deleted when PVC is deleted
     #   - "retain": Volume is kept on NASty when PVC is deleted (useful for data protection)
     deleteStrategy: ""
+    # Compression algorithm for new subvolumes (e.g., "lz4", "zstd", "none")
+    # If empty, inherits the filesystem default.
+    compression: ""
     # Volume Name Templating:
     #   Go template for volume names (e.g., "{{ .PVCNamespace }}-{{ .PVCName }}")
     #   Available variables: .PVCName, .PVCNamespace, .PVName
@@ -321,52 +323,34 @@ storageClasses:
     #   Go template for dataset comments visible in NASty
     #   Uses the same variables as nameTemplate: .PVCName, .PVCNamespace, .PVName
     #   Example: "{{ .PVCNamespace }}/{{ .PVCName }}" shows "production/myapp-data" in NASty
-    #   Comments are free-form text (no sanitization or length limits)
     commentTemplate: ""
     # Volume Adoption (for cluster migration):
     #   When "true", newly created volumes are marked as adoptable
-    #   Adoptable volumes can be imported into a different cluster using 'kubectl nasty-csi adopt'
+    #   Adoptable volumes can be imported into a different cluster using 'kubectl nasty adopt'
     markAdoptable: ""
     #   When "true", the driver will adopt existing volumes that match the PVC name
     #   Useful for migrating volumes between clusters or recovering from cluster failures
     adoptExisting: ""
-    # Encryption (ZFS native encryption):
-    #   Set to "true" to enable ZFS native encryption for the dataset
+    # Encryption (bcachefs native encryption):
+    #   Set to "true" to enable encryption for the subvolume
     encryption: ""
-    #   Algorithm to use (default: "AES-256-GCM")
-    #   Options: AES-256-GCM, AES-128-CCM, AES-192-CCM, AES-256-CCM, AES-128-GCM, AES-192-GCM
-    encryptionAlgorithm: ""
-    #   Set to "true" to auto-generate encryption key (NASty generates and manages the key)
-    encryptionGenerateKey: ""
-    #   To use passphrase or hex key, create a Secret and reference it with:
-    #     csi.storage.k8s.io/provisioner-secret-name: <secret-name>
-    #     csi.storage.k8s.io/provisioner-secret-namespace: <secret-namespace>
-    #   Secret keys:
-    #     - encryptionPassphrase: passphrase for encryption (min 8 chars)
-    #     - encryptionKey: hex-encoded encryption key (64 chars for 256-bit)
-    #
-    # Additional parameters (ZFS properties, etc.)
-    # Available parameters:
-    #   zfs.compression: ZFS compression algorithm (e.g., "lz4", "zstd", "off")
-    #   zfs.dedup: ZFS deduplication (e.g., "on", "off", "verify")
-    #   zfs.atime: Access time updates (e.g., "on", "off")
-    #   zfs.sync: Sync writes (e.g., "standard", "always", "disabled")
+    # NFS client access rules (optional)
+    #   Format: "host1:options,host2:options" or "*:rw,no_root_squash"
+    #   If empty, NASty defaults apply.
+    # nfsClients: "*:rw,no_root_squash"
+    # Additional protocol-specific parameters
     parameters: {}
 
   # NVMe-oF storage class (requires Linux with nvme-tcp kernel module)
   # IMPORTANT: Before enabling, ensure you have configured an NVMe-oF port
-  # in NASty. The CSI driver automatically
-  # creates a dedicated subsystem for each volume - no pre-configured subsystem needed.
+  # in NASty. The CSI driver automatically creates a dedicated subsystem
+  # for each volume — no pre-configured subsystem needed.
   - name: nasty-csi-nvmeof
     enabled: false
     protocol: nvmeof
     isDefault: false
-    # Filesystem name on NASty
     filesystem: "storage"
-    # NASty server IP/hostname for NVMe-oF target
     server: ""
-    # Optional: Parent dataset
-    parentDataset: ""
     # NVMe-oF transport: tcp or rdma
     transport: "tcp"
     # NVMe-oF port number
@@ -381,129 +365,52 @@ storageClasses:
     allowVolumeExpansion: true
     # Mount options for NVMe-oF filesystem volumes
     # These are merged with driver defaults (noatime)
-    # User-specified options override defaults if there's a conflict
-    # Example: ["discard", "nodiscard", "data=ordered"]
     mountOptions: []
-    # Delete strategy: "delete" or "retain"
-    #   - "delete" (default): Volume is deleted when PVC is deleted
-    #   - "retain": Volume is kept on NASty when PVC is deleted (useful for data protection)
     deleteStrategy: ""
-    # Volume Name Templating:
-    #   Go template for volume names (e.g., "{{ .PVCNamespace }}-{{ .PVCName }}")
-    #   Available variables: .PVCName, .PVCNamespace, .PVName
+    compression: ""
     nameTemplate: ""
-    #   Simple prefix to prepend to volume name (e.g., "prod-")
     namePrefix: ""
-    #   Simple suffix to append to volume name (e.g., "-data")
-    #   Note: nameTemplate takes precedence over namePrefix/nameSuffix if both are specified
     nameSuffix: ""
-    # Dataset Comment Templating:
-    #   Go template for dataset comments visible in NASty
-    #   Uses the same variables as nameTemplate
     commentTemplate: ""
-    # Volume Adoption (for cluster migration):
-    #   When "true", newly created volumes are marked as adoptable
     markAdoptable: ""
-    #   When "true", the driver will adopt existing volumes that match the PVC name
     adoptExisting: ""
-    # Encryption (ZFS native encryption):
-    #   Set to "true" to enable ZFS native encryption for the ZVOL
     encryption: ""
-    encryptionAlgorithm: ""
-    encryptionGenerateKey: ""
-    #   To use passphrase or hex key, create a Secret and reference it with:
-    #     csi.storage.k8s.io/provisioner-secret-name: <secret-name>
-    #     csi.storage.k8s.io/provisioner-secret-namespace: <secret-namespace>
-    #   Secret keys:
-    #     - encryptionPassphrase: passphrase for encryption (min 8 chars)
-    #     - encryptionKey: hex-encoded encryption key (64 chars for 256-bit)
-    #
-    # Additional parameters (ZFS properties, NVMe-oF-specific, etc.)
-    # Available parameters:
-    #   zfs.sparse: Thin provisioning for ZVOLs (e.g., "true", "false")
-    #   zfs.compression: ZFS compression algorithm (e.g., "lz4", "zstd", "off")
-    #   zfs.dedup: ZFS deduplication (e.g., "on", "off", "verify")
-    #   zfs.sync: Sync writes (e.g., "standard", "always", "disabled")
-    #   zfs.volblocksize: ZVOL block size (e.g., "16K", "64K")
+    # Additional parameters:
     #   portID: NASty NVMe-oF port ID (auto-detected if not specified)
-    # Parameters can be specified flat or nested:
-    #   Flat:   { "zfs.sparse": "true", "zfs.compression": "lz4" }
-    #   Nested: { zfs: { sparse: "true", compression: "lz4" } }
+    #   nvmeof.nr-io-queues: Number of I/O queues
+    #   nvmeof.queue-size: Queue size
     parameters: {}
 
   # iSCSI storage class (requires open-iscsi on nodes)
   # IMPORTANT: Before enabling, ensure you have configured an iSCSI portal
-  # in NASty. The CSI driver automatically creates a
-  # dedicated target for each volume - no pre-configured target needed.
+  # in NASty. The CSI driver automatically creates a dedicated target
+  # for each volume — no pre-configured target needed.
   - name: nasty-csi-iscsi
     enabled: false
     protocol: iscsi
     isDefault: false
-    # Filesystem name on NASty
     filesystem: "storage"
-    # NASty server IP/hostname for iSCSI target
     server: ""
-    # Optional: Parent dataset
-    parentDataset: ""
     # iSCSI port number
     port: "3260"
     # Filesystem type for formatted volumes (ext4, ext3, xfs)
     fsType: "ext4"
     reclaimPolicy: Delete
     # NOTE: Must use Immediate for snapshot restore to work correctly.
-    # WaitForFirstConsumer causes csi-provisioner to not pass VolumeContentSource
-    # (snapshot reference) to CreateVolume, resulting in empty volumes instead of clones.
     volumeBindingMode: Immediate
     allowVolumeExpansion: true
     # Mount options for iSCSI filesystem volumes
     # These are merged with driver defaults (noatime, _netdev)
-    # User-specified options override defaults if there's a conflict
-    # Example: ["discard", "data=ordered"]
     mountOptions: []
-    # Delete strategy: "delete" or "retain"
-    #   - "delete" (default): Volume is deleted when PVC is deleted
-    #   - "retain": Volume is kept on NASty when PVC is deleted (useful for data protection)
     deleteStrategy: ""
-    # Volume Name Templating:
-    #   Go template for volume names (e.g., "{{ .PVCNamespace }}-{{ .PVCName }}")
-    #   Available variables: .PVCName, .PVCNamespace, .PVName
+    compression: ""
     nameTemplate: ""
-    #   Simple prefix to prepend to volume name (e.g., "prod-")
     namePrefix: ""
-    #   Simple suffix to append to volume name (e.g., "-data")
-    #   Note: nameTemplate takes precedence over namePrefix/nameSuffix if both are specified
     nameSuffix: ""
-    # Dataset Comment Templating:
-    #   Go template for dataset comments visible in NASty
-    #   Uses the same variables as nameTemplate
     commentTemplate: ""
-    # Volume Adoption (for cluster migration):
-    #   When "true", newly created volumes are marked as adoptable
     markAdoptable: ""
-    #   When "true", the driver will adopt existing volumes that match the PVC name
     adoptExisting: ""
-    # Encryption (ZFS native encryption):
-    #   Set to "true" to enable ZFS native encryption for the ZVOL
     encryption: ""
-    encryptionAlgorithm: ""
-    encryptionGenerateKey: ""
-    #   To use passphrase or hex key, create a Secret and reference it with:
-    #     csi.storage.k8s.io/provisioner-secret-name: <secret-name>
-    #     csi.storage.k8s.io/provisioner-secret-namespace: <secret-namespace>
-    #   Secret keys:
-    #     - encryptionPassphrase: passphrase for encryption (min 8 chars)
-    #     - encryptionKey: hex-encoded encryption key (64 chars for 256-bit)
-    #
-    # Additional parameters (ZFS properties, etc.)
-    # Available parameters:
-    #   zfs.sparse: Thin provisioning for ZVOLs (e.g., "true", "false")
-    #   zfs.compression: ZFS compression algorithm (e.g., "lz4", "zstd", "off")
-    #   zfs.dedup: ZFS deduplication (e.g., "on", "off", "verify")
-    #   zfs.sync: Sync writes (e.g., "standard", "always", "disabled")
-    #   zfs.volblocksize: ZVOL block size (e.g., "16K", "64K")
-    # Parameters can be specified flat or nested:
-    #   Flat:   { "zfs.sparse": "true", "zfs.compression": "lz4" }
-    #   Nested: { zfs: { sparse: "true", compression: "lz4" } }
     parameters: {}
 
   # SMB/CIFS storage class (requires cifs-utils on nodes)
@@ -513,58 +420,39 @@ storageClasses:
     enabled: false
     protocol: smb
     isDefault: false
-    # Filesystem name on NASty
     filesystem: "storage"
-    # NASty server IP/hostname for SMB shares
     server: ""
-    # Optional: Parent dataset
-    parentDataset: ""
     reclaimPolicy: Delete
     volumeBindingMode: Immediate
     allowVolumeExpansion: true
     # Mount options for SMB volumes
     # These are merged with driver defaults (vers=3.0 on Linux)
-    # User-specified options override defaults if there's a conflict
-    # Example: ["seal", "cache=strict"]
     mountOptions: []
-    # Delete strategy: "delete" or "retain"
     deleteStrategy: ""
-    # Volume Name Templating:
+    compression: ""
     nameTemplate: ""
     namePrefix: ""
     nameSuffix: ""
-    # Dataset Comment Templating:
     commentTemplate: ""
-    # Volume Adoption (for cluster migration):
     markAdoptable: ""
     adoptExisting: ""
-    # Encryption (ZFS native encryption):
     encryption: ""
-    encryptionAlgorithm: ""
-    encryptionGenerateKey: ""
     # SMB Credentials Secret:
     #   Kubernetes Secret containing SMB authentication credentials.
     #   The secret should have keys: username, password, domain (optional).
-    #   The kubelet uses nodeStageSecretRef to pass these to the CSI driver.
     smbCredentialsSecret:
-      # Name of the Kubernetes Secret
       name: ""
-      # Namespace of the Secret (defaults to release namespace)
       namespace: ""
     # SMB username for share ownership — the share directory will be
     # chowned to this user so authenticated writes succeed.
     smbUsername: ""
-    # Additional parameters (ZFS properties, etc.)
-    # Parameters can be specified flat or nested:
-    #   Flat:   { "zfs.compression": "lz4" }
-    #   Nested: { zfs: { compression: "lz4" } }
     parameters: {}
 
   # To add more storage classes, simply add more entries to this list:
   # - name: nasty-csi-nfs-retain
   #   enabled: true
   #   protocol: nfs
-  #   filesystem: "tank"
+  #   filesystem: "storage"
   #   server: "10.0.0.1"
   #   reclaimPolicy: Retain
   #   deleteStrategy: retain
@@ -575,27 +463,12 @@ snapshots:
   # NOTE: Requires VolumeSnapshot CRDs to be installed in the cluster first
   # Install with: kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/release-8.2/client/config/crd/...
   enabled: false
-  
+
   # VolumeSnapshotClass configuration
-  # VolumeSnapshotClass resources will be created for enabled storage classes
   volumeSnapshotClass:
     # Enable creation of VolumeSnapshotClass resources
     create: true
     # Deletion policy: Delete or Retain
-    deletionPolicy: Delete
-  
-  # Detached snapshots configuration
-  # Detached snapshots use zfs send/receive to create independent dataset copies
-  # that survive deletion of the source volume. Useful for backup/DR scenarios.
-  detached:
-    # Enable detached VolumeSnapshotClass creation
-    # When enabled, a separate "-snapshot-detached" class will be created
-    enabled: false
-    # Parent dataset for detached snapshots (optional)
-    # If not specified, defaults to {filesystem}/csi-detached-snapshots
-    # Example: "tank/backups/csi-snapshots"
-    parentDataset: ""
-    # Deletion policy for detached snapshots
     deletionPolicy: Delete
 
 # Security context for controller pod
