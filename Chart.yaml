@@ -15,8 +15,11 @@ appVersion: "0.0.1"
 keywords:
   - storage
   - csi
+  - kubernetes
   - nasty
+  - bcachefs
   - nfs
+  - smb
   - nvmeof
   - iscsi
 
