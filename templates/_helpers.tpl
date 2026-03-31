@@ -203,9 +203,6 @@ parameters:
   {{- if $sc.server }}
   server: {{ $sc.server | quote }}
   {{- end }}
-  {{- if $sc.parentDataset }}
-  parentDataset: {{ $sc.parentDataset | quote }}
-  {{- end }}
   {{- if $sc.deleteStrategy }}
   deleteStrategy: {{ $sc.deleteStrategy | quote }}
   {{- end }}

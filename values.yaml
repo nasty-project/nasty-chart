@@ -53,7 +53,7 @@ controller:
   # Log verbosity level (0-5, higher = more verbose)
   # 0: Errors only
   # 2: Normal operation (default) - volume created/deleted messages
-  # 4: Detailed operations - API calls, dataset queries
+  # 4: Detailed operations - API calls, subvolume queries
   # 5: Debug - request/response bodies, context dumps
   logLevel: 2
 
@@ -282,7 +282,7 @@ sidecars:
 # Required fields per entry: name, protocol (nfs/nvmeof/iscsi/smb), filesystem, server
 storageClasses:
   # NFS storage class
-  - name: nasty-csi-nfs
+  - name: nasty-nfs
     enabled: true
     protocol: nfs
     # Set as default storage class
@@ -326,8 +326,8 @@ storageClasses:
     #   Simple suffix to append to volume name (e.g., "-data")
     #   Note: nameTemplate takes precedence over namePrefix/nameSuffix if both are specified
     nameSuffix: ""
-    # Dataset Comment Templating:
-    #   Go template for dataset comments visible in NASty
+    # Comment Templating:
+    #   Go template for subvolume comments visible in NASty
     #   Uses the same variables as nameTemplate: .PVCName, .PVCNamespace, .PVName
     #   Example: "{{ .PVCNamespace }}/{{ .PVCName }}" shows "production/myapp-data" in NASty
     commentTemplate: ""
@@ -352,7 +352,7 @@ storageClasses:
   # IMPORTANT: Before enabling, ensure you have configured an NVMe-oF port
   # in NASty. The CSI driver automatically creates a dedicated subsystem
   # for each volume — no pre-configured subsystem needed.
-  - name: nasty-csi-nvmeof
+  - name: nasty-nvme
     enabled: false
     protocol: nvmeof
     isDefault: false
@@ -392,7 +392,7 @@ storageClasses:
   # IMPORTANT: Before enabling, ensure you have configured an iSCSI portal
   # in NASty. The CSI driver automatically creates a dedicated target
   # for each volume — no pre-configured target needed.
-  - name: nasty-csi-iscsi
+  - name: nasty-iscsi
     enabled: false
     protocol: iscsi
     isDefault: false
@@ -423,7 +423,7 @@ storageClasses:
   # SMB/CIFS storage class (requires cifs-utils on nodes)
   # IMPORTANT: SMB requires authentication. Create a Kubernetes Secret with keys:
   #   username, password, and optionally domain, then reference it below.
-  - name: nasty-csi-smb
+  - name: nasty-smb
     enabled: false
     protocol: smb
     isDefault: false
@@ -456,7 +456,7 @@ storageClasses:
     parameters: {}
 
   # To add more storage classes, simply add more entries to this list:
-  # - name: nasty-csi-nfs-retain
+  # - name: nasty-nfs-retain
   #   enabled: true
   #   protocol: nfs
   #   filesystem: "storage"
