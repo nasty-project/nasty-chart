@@ -94,7 +94,7 @@ storageClasses:
     reclaimPolicy: Retain
     deleteStrategy: retain
 
-  - name: nasty-nvme
+  - name: nasty-nvmeof
     enabled: true
     protocol: nvmeof
     filesystem: "storage"

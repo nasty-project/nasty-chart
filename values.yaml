@@ -352,7 +352,7 @@ storageClasses:
   # IMPORTANT: Before enabling, ensure you have configured an NVMe-oF port
   # in NASty. The CSI driver automatically creates a dedicated subsystem
   # for each volume — no pre-configured subsystem needed.
-  - name: nasty-nvme
+  - name: nasty-nvmeof
     enabled: false
     protocol: nvmeof
     isDefault: false
