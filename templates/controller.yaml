@@ -55,7 +55,7 @@ spec:
             {{- if .Values.controller.dashboard.enabled }}
             - "--dashboard-addr=:{{ .Values.controller.dashboard.port }}"
             {{- with (index .Values.storageClasses 0) }}
-            - "--dashboard-pool={{ .pool }}"
+            - "--dashboard-filesystem={{ .filesystem }}"
             {{- end }}
             {{- end }}
             {{- if .Values.clusterID }}
