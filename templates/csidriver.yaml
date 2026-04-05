@@ -9,7 +9,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  attachRequired: false
+  attachRequired: true
   podInfoOnMount: true
   storageCapacity: true
   fsGroupPolicy: File
