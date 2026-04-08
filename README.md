@@ -57,18 +57,25 @@ Each entry in `storageClasses` creates a Kubernetes StorageClass. Multiple entri
 | `name` | StorageClass name | `nasty-nfs` |
 | `protocol` | `nfs`, `nvmeof`, `iscsi`, `smb` | — |
 | `enabled` | Create this StorageClass | `true` |
+| `isDefault` | Set as default storage class | `false` |
 | `filesystem` | bcachefs filesystem name on NASty | `"storage"` |
 | `server` | NASty IP/hostname | `""` |
 | `reclaimPolicy` | `Delete` or `Retain` | `Delete` |
+| `volumeBindingMode` | `Immediate` or `WaitForFirstConsumer` | `Immediate` |
 | `allowVolumeExpansion` | Enable PVC resize | `true` |
 | `mountOptions` | Additional mount options | `[]` |
 | `deleteStrategy` | `delete` or `retain` (NASty-side) | `""` |
 | `compression` | bcachefs compression (`lz4`, `zstd`) | `""` |
+| `foregroundTarget` | Device group for foreground writes | `""` |
+| `backgroundTarget` | Device group for background moves (tiering) | `""` |
+| `promoteTarget` | Device group to promote data to on read | `""` |
 | `encryption` | Require encrypted filesystem | `""` |
 | `nameTemplate` | Go template for volume names | `""` |
 | `namePrefix` / `nameSuffix` | Volume name prefix/suffix | `""` |
+| `commentTemplate` | Go template for subvolume comments | `""` |
 | `markAdoptable` | Allow cross-cluster adoption | `""` |
 | `adoptExisting` | Adopt existing volumes | `""` |
+| `parameters` | Additional protocol-specific parameters | `{}` |
 
 **Block protocol fields** (NVMe-oF, iSCSI):
 
@@ -77,6 +84,14 @@ Each entry in `storageClasses` creates a Kubernetes StorageClass. Multiple entri
 | `transport` | NVMe-oF transport (`tcp`/`rdma`) | `tcp` |
 | `port` | Target port | `4420` / `3260` |
 | `fsType` | Filesystem on block device | `ext4` |
+
+**SMB-specific fields:**
+
+| Field | Description | Default |
+|-------|-------------|---------|
+| `smbCredentialsSecret.name` | Secret name with SMB credentials | `""` |
+| `smbCredentialsSecret.namespace` | Secret namespace | `""` |
+| `smbUsername` | SMB user for share directory ownership | `""` |
 
 **Example — multiple classes:**
 
