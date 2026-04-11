@@ -39,8 +39,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       hostNetwork: true
+      {{- if .Values.node.protocols.iscsi }}
       hostPID: true   # Required for iSCSI nsenter to access host's iscsid (Talos)
       hostIPC: true   # Required for iSCSI to communicate with host's iscsid daemon
+      {{- end }}
       containers:
         # NASty CSI Node Plugin
         - name: nasty-csi-plugin
@@ -110,11 +112,13 @@ spec:
               mountPath: /sys
             - name: registry-dir
               mountPath: /var/lib/nasty-csi
+            {{- if .Values.node.protocols.iscsi }}
             # iSCSI requires access to host iscsid socket and configuration
             - name: run-dir
               mountPath: /run
             - name: iscsi-dir
               mountPath: /etc/iscsi
+            {{- end }}
           resources:
             {{- toYaml .Values.node.resources | nindent 12 }}
 
@@ -184,6 +188,7 @@ spec:
           hostPath:
             path: /var/lib/nasty-csi
             type: DirectoryOrCreate
+        {{- if .Values.node.protocols.iscsi }}
         # iSCSI: host run directory for iscsid socket
         - name: run-dir
           hostPath:
@@ -194,6 +199,7 @@ spec:
           hostPath:
             path: /etc/iscsi
             type: DirectoryOrCreate
+        {{- end }}
 
       {{- with .Values.node.nodeSelector }}
       nodeSelector:

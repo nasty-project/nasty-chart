@@ -179,6 +179,13 @@ node:
   # Affinity for node pods
   affinity: {}
 
+  # Protocol support toggles.
+  # Disable protocols your nodes don't support to avoid mounting non-existent
+  # host paths (e.g., /etc/iscsi on Talos Linux where /etc is read-only).
+  protocols:
+    iscsi: true
+    # smb: true  # Reserved for future use
+
   # NVMe-oF optimization settings
   # Skip redundant nvme discover before nvme connect.
   # All connection params (NQN, server, port, transport) are already known from volume context.
