@@ -224,6 +224,24 @@ parameters:
   {{- if $sc.adoptExisting }}
   adoptExisting: {{ $sc.adoptExisting | quote }}
   {{- end }}
+  {{- if $sc.compression }}
+  compression: {{ $sc.compression | quote }}
+  {{- end }}
+  {{- if $sc.foregroundTarget }}
+  foregroundTarget: {{ $sc.foregroundTarget | quote }}
+  {{- end }}
+  {{- if $sc.backgroundTarget }}
+  backgroundTarget: {{ $sc.backgroundTarget | quote }}
+  {{- end }}
+  {{- if $sc.promoteTarget }}
+  promoteTarget: {{ $sc.promoteTarget | quote }}
+  {{- end }}
+  {{- if $sc.metadataTarget }}
+  metadataTarget: {{ $sc.metadataTarget | quote }}
+  {{- end }}
+  {{- if $sc.dataReplicas }}
+  dataReplicas: {{ $sc.dataReplicas | quote }}
+  {{- end }}
   {{- if $sc.encryption }}
   encryption: {{ $sc.encryption | quote }}
   {{- end }}

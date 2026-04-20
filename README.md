@@ -69,6 +69,8 @@ Each entry in `storageClasses` creates a Kubernetes StorageClass. Multiple entri
 | `foregroundTarget` | Device group for foreground writes | `""` |
 | `backgroundTarget` | Device group for background moves (tiering) | `""` |
 | `promoteTarget` | Device group to promote data to on read | `""` |
+| `metadataTarget` | Device group for metadata/btree writes | `""` |
+| `dataReplicas` | Number of data replicas (`"1"` for expendable, `"2"` for durable) | `""` |
 | `encryption` | Require encrypted filesystem | `""` |
 | `nameTemplate` | Go template for volume names | `""` |
 | `namePrefix` / `nameSuffix` | Volume name prefix/suffix | `""` |
