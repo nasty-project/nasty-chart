@@ -15,6 +15,6 @@ parameters:
   protocol: "nfs"
   filesystem: "tank"
   server: "192.0.2.10"
-allowVolumeExpansion: true
+allowVolumeExpansion: false
 reclaimPolicy: Delete
 volumeBindingMode: Immediate

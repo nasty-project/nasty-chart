@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "nasty-csi-driver.fullname" . }}-controller
-  namespace: {{ .Values.namespace }}
+  namespace: {{ include "nasty-csi-driver.namespace" . }}
   labels:
     {{- include "nasty-csi-driver.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller

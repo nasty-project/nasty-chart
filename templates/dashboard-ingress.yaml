@@ -3,7 +3,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "nasty-csi-driver.fullname" . }}-dashboard
-  namespace: {{ .Values.namespace }}
+  namespace: {{ include "nasty-csi-driver.namespace" . }}
   labels:
     {{- include "nasty-csi-driver.labels" . | nindent 4 }}
   {{- with .Values.controller.dashboard.ingress.annotations }}

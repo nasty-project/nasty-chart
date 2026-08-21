@@ -520,8 +520,8 @@ serviceAccount:
   # Annotations to add to the service accounts
   annotations: {}
 
-# Namespace where the CSI driver will be deployed
-namespace: kube-system
+# Namespace where the CSI driver will be deployed (defaults to the release namespace)
+namespace: ""
 
 # RBAC configuration
 rbac:

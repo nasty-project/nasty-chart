@@ -120,7 +120,14 @@ storage.k8s.io/v1beta1
 Create the CSI driver name
 */}}
 {{- define "nasty-csi-driver.driverName" -}}
-{{- .Values.driverName | default "nasty.csi.io" }}
+{{- .Values.csiDriverName | default "nasty.csi.io" }}
+{{- end }}
+
+{{/*
+Use an explicit namespace override, otherwise install into the release namespace.
+*/}}
+{{- define "nasty-csi-driver.namespace" -}}
+{{- .Values.namespace | default .Release.Namespace }}
 {{- end }}
 
 {{/*
@@ -266,7 +273,7 @@ parameters:
   {{- if and (eq $protocol "smb") $sc.smbCredentialsSecret }}
   {{- if $sc.smbCredentialsSecret.name }}
   csi.storage.k8s.io/node-stage-secret-name: {{ $sc.smbCredentialsSecret.name | quote }}
-  csi.storage.k8s.io/node-stage-secret-namespace: {{ $sc.smbCredentialsSecret.namespace | default $.Release.Namespace | quote }}
+  csi.storage.k8s.io/node-stage-secret-namespace: {{ $sc.smbCredentialsSecret.namespace | default (include "nasty-csi-driver.namespace" $) | quote }}
   {{- end }}
   {{- end }}
   {{- if and (eq $protocol "smb") $sc.smbUsername }}
@@ -283,7 +290,11 @@ parameters:
   {{- end }}
   {{- end }}
   {{- end }}
-allowVolumeExpansion: {{ $sc.allowVolumeExpansion | default true }}
+{{- if hasKey $sc "allowVolumeExpansion" }}
+allowVolumeExpansion: {{ $sc.allowVolumeExpansion }}
+{{- else }}
+allowVolumeExpansion: true
+{{- end }}
 reclaimPolicy: {{ $sc.reclaimPolicy | default "Delete" }}
 volumeBindingMode: {{ $sc.volumeBindingMode | default "Immediate" }}
 {{- if $sc.mountOptions }}

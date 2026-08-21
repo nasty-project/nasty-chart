@@ -5,10 +5,10 @@ Your release is named {{ .Release.Name }}.
 To verify the installation:
 
 1. Check the controller pod status:
-   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/component=controller
+   kubectl get pods -n {{ include "nasty-csi-driver.namespace" . }} -l app.kubernetes.io/component=controller
 
 2. Check the node pods status:
-   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/component=node
+   kubectl get pods -n {{ include "nasty-csi-driver.namespace" . }} -l app.kubernetes.io/component=node
 
 3. Verify the CSI driver registration:
    kubectl get csidrivers {{ include "nasty-csi-driver.driverName" . }}
