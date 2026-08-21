@@ -1,0 +1,254 @@
+---
+# Source: nasty-csi-driver/templates/csidriver.yaml
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: storage.example.com
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  attachRequired: true
+  podInfoOnMount: true
+  storageCapacity: true
+  fsGroupPolicy: File
+  volumeLifecycleModes:
+    - Persistent
+
+
+---
+# Source: nasty-csi-driver/templates/storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: custom-nfs
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+provisioner: nasty.csi.io
+parameters:
+  protocol: "nfs"
+  filesystem: "tank"
+  server: "192.0.2.10"
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+
+
+---
+# Source: nasty-csi-driver/templates/node.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: golden-nasty-csi-node
+  namespace: kube-system
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: node
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nasty-csi-driver
+      app.kubernetes.io/instance: golden
+      app.kubernetes.io/component: node
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nasty-csi-driver
+        app.kubernetes.io/instance: golden
+        app.kubernetes.io/component: node
+    spec:
+      serviceAccountName: golden-nasty-csi-node
+      priorityClassName: system-node-critical
+      hostNetwork: true
+      hostPID: true   # Required for iSCSI nsenter to access host's iscsid (Talos)
+      hostIPC: true   # Required for iSCSI to communicate with host's iscsid daemon
+      containers:
+        # NASty CSI Node Plugin
+        - name: nasty-csi-plugin
+          image: "bfenski/nasty-csi:GOLDEN"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--endpoint=unix:///csi/csi.sock"
+            - "--node-id=$(NODE_ID)"
+            - "--api-url=$(NASTY_URL)"
+            - "--api-key=$(NASTY_API_KEY)"
+            - "--v=2"
+            - "--max-concurrent-nvme-connects=5"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NASTY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: nasty-credentials
+                  key: url
+            - name: NASTY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nasty-credentials
+                  key: api-key
+          ports:
+            - name: healthz
+              containerPort: 9808
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: Bidirectional
+            - name: plugins-mount-dir
+              mountPath: /var/lib/kubelet/plugins
+              mountPropagation: Bidirectional
+            - name: device-dir
+              mountPath: /dev
+            - name: sys-dir
+              mountPath: /sys
+            - name: registry-dir
+              mountPath: /var/lib/nasty-csi
+            # iSCSI requires access to host iscsid socket and configuration
+            - name: run-dir
+              mountPath: /run
+            - name: iscsi-dir
+              mountPath: /etc/iscsi
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+
+        # CSI Node Driver Registrar sidecar
+        - name: csi-node-driver-registrar
+          image: "registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.15.0"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)"
+            - "--v=2"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+            - name: DRIVER_REG_SOCK_PATH
+              value: /var/lib/kubelet/plugins/storage.example.com/csi.sock
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+
+        # CSI Liveness Probe sidecar
+        - name: liveness-probe
+          image: "registry.k8s.io/sig-storage/livenessprobe:v2.14.0"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--health-port=9808"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+
+      volumes:
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/storage.example.com
+            type: DirectoryOrCreate
+        - name: registration-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry
+            type: Directory
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
+        - name: plugins-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins
+            type: Directory
+        - name: device-dir
+          hostPath:
+            path: /dev
+            type: Directory
+        - name: sys-dir
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: registry-dir
+          hostPath:
+            path: /var/lib/nasty-csi
+            type: DirectoryOrCreate
+        # iSCSI: host run directory for iscsid socket
+        - name: run-dir
+          hostPath:
+            path: /run
+            type: Directory
+        # iSCSI: host iSCSI configuration and initiator name
+        - name: iscsi-dir
+          hostPath:
+            path: /etc/iscsi
+            type: DirectoryOrCreate
+
+
+---
+# Source: nasty-csi-driver/templates/volumesnapshotclass.yaml
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: custom-nfs-snapshot
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+driver: storage.example.com
+deletionPolicy: Delete

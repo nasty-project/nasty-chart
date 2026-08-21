@@ -1,0 +1,10 @@
+nasty:
+  existingSecret: nasty-credentials
+
+storageClasses:
+  - name: no-expansion
+    enabled: true
+    protocol: nfs
+    filesystem: tank
+    server: 192.0.2.10
+    allowVolumeExpansion: false

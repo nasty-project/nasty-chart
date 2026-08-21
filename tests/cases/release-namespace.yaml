@@ -1,0 +1,10 @@
+nasty:
+  url: wss://nasty.example.test/ws
+  apiKey: test-api-key
+
+storageClasses:
+  - name: namespace-nfs
+    enabled: true
+    protocol: nfs
+    filesystem: tank
+    server: 192.0.2.10

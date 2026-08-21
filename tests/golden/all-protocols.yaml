@@ -1,0 +1,93 @@
+---
+# Source: nasty-csi-driver/templates/storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: protocol-nfs
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+provisioner: nasty.csi.io
+parameters:
+  protocol: "nfs"
+  filesystem: "tank"
+  server: "192.0.2.10"
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+
+---
+# Source: nasty-csi-driver/templates/storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: protocol-nvmeof
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+provisioner: nasty.csi.io
+parameters:
+  protocol: "nvmeof"
+  filesystem: "tank"
+  server: "192.0.2.10"
+  transport: "tcp"
+  port: "4420"
+  csi.storage.k8s.io/fstype: "xfs"
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+
+---
+# Source: nasty-csi-driver/templates/storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: protocol-iscsi
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+provisioner: nasty.csi.io
+parameters:
+  protocol: "iscsi"
+  filesystem: "tank"
+  server: "192.0.2.10"
+  port: "3260"
+  csi.storage.k8s.io/fstype: "ext4"
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+
+
+---
+# Source: nasty-csi-driver/templates/storageclass.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: protocol-smb
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+provisioner: nasty.csi.io
+parameters:
+  protocol: "smb"
+  filesystem: "tank"
+  server: "192.0.2.10"
+  csi.storage.k8s.io/node-stage-secret-name: "smb-credentials"
+  csi.storage.k8s.io/node-stage-secret-namespace: "storage-secrets"
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate

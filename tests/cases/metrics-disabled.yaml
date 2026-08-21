@@ -1,0 +1,17 @@
+nasty:
+  existingSecret: nasty-credentials
+
+controller:
+  metrics:
+    enabled: false
+    service:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+
+storageClasses:
+  - name: metrics-nfs
+    enabled: true
+    protocol: nfs
+    filesystem: tank
+    server: 192.0.2.10
