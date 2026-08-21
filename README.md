@@ -29,7 +29,7 @@ A [CSI](https://kubernetes-csi.github.io/docs/) driver for [NASty](https://githu
 ## Quick Start
 
 ```bash
-helm install nasty-csi oci://ghcr.io/nasty-project/nasty-csi-driver \
+helm install nasty-csi oci://ghcr.io/nasty-project/charts/nasty-csi-driver \
   --namespace kube-system \
   --set nasty.url="wss://YOUR-NASTY-IP/ws" \
   --set nasty.apiKey="YOUR-API-KEY" \

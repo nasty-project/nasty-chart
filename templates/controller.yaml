@@ -28,6 +28,8 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ include "nasty-csi-driver.controller.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
       {{- if .Values.priorityClassName.controller }}
       priorityClassName: {{ .Values.priorityClassName.controller }}
       {{- end }}
@@ -53,8 +55,12 @@ spec:
             {{- end }}
             {{- if .Values.controller.dashboard.enabled }}
             - "--dashboard-addr=:{{ .Values.controller.dashboard.port }}"
+            {{- if .Values.controller.dashboard.filesystem }}
+            - "--dashboard-filesystem={{ .Values.controller.dashboard.filesystem }}"
+            {{- else }}
             {{- with (index .Values.storageClasses 0) }}
-            - "--dashboard-filesystem={{ .filesystem }}"
+            - "--dashboard-filesystem={{ .filesystem | default .pool }}"
+            {{- end }}
             {{- end }}
             {{- end }}
             {{- if .Values.clusterID }}

@@ -9,8 +9,8 @@ type: application
 # to the chart and its templates, including the app version.
 version: 0.0.8
 
-# This is the version number of the application being deployed.
-# CI release workflow updates this automatically from the git tag.
+# CSI application version deployed by this chart. It is independent of the
+# chart version and changes only when the chart adopts another CSI release.
 appVersion: "0.0.8"
 
 keywords:

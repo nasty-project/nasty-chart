@@ -1,0 +1,27 @@
+driverName: legacy.example.com
+
+nasty:
+  existingSecret: nasty-credentials
+
+csiDriverName: storage.example.com
+namespace: kube-system
+
+controller:
+  metrics:
+    enabled: false
+
+snapshots:
+  enabled: true
+  detached:
+    enabled: false
+    parentDataset: legacy-snapshots
+    deletionPolicy: Delete
+
+storageClasses:
+  - name: upgraded-nfs
+    enabled: true
+    protocol: nfs
+    server: 192.0.2.10
+    pool: tank
+    parentDataset: legacy-parent
+    allowVolumeExpansion: false

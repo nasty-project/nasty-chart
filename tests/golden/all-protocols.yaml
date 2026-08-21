@@ -18,8 +18,6 @@ parameters:
 allowVolumeExpansion: true
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
-
-
 ---
 # Source: nasty-csi-driver/templates/storageclass.yaml
 apiVersion: storage.k8s.io/v1
@@ -43,8 +41,6 @@ parameters:
 allowVolumeExpansion: true
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
-
-
 ---
 # Source: nasty-csi-driver/templates/storageclass.yaml
 apiVersion: storage.k8s.io/v1
@@ -67,8 +63,6 @@ parameters:
 allowVolumeExpansion: true
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
-
-
 ---
 # Source: nasty-csi-driver/templates/storageclass.yaml
 apiVersion: storage.k8s.io/v1

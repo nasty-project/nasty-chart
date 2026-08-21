@@ -147,7 +147,8 @@ Validate required NASty configuration
 {{- if not (mustHas .protocol (list "nfs" "nvmeof" "iscsi" "smb")) }}
   {{- fail (printf "\n\nCONFIGURATION ERROR: storageClasses entry %q: protocol must be one of: nfs, nvmeof, iscsi, smb (got %q)" .name .protocol) }}
 {{- end }}
-{{- if not .filesystem }}
+{{- $filesystem := .filesystem | default .pool }}
+{{- if not $filesystem }}
   {{- fail (printf "\n\nCONFIGURATION ERROR: storageClasses entry %q: filesystem is required.\nExample: --set 'storageClasses[0].filesystem=tank'" .name) }}
 {{- end }}
 {{- if and (eq .protocol "nfs") (not .server) }}
@@ -206,7 +207,7 @@ metadata:
 provisioner: {{ include "nasty-csi-driver.driverName" $ }}
 parameters:
   protocol: {{ $protocol | quote }}
-  filesystem: {{ $sc.filesystem | quote }}
+  filesystem: {{ $sc.filesystem | default $sc.pool | quote }}
   {{- if $sc.server }}
   server: {{ $sc.server | quote }}
   {{- end }}
