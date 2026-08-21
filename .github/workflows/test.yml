@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@59b1c81c6280f5abebb1fb1bc585696daa7dfb42 # v5
         with:
           version: ${{ matrix.helm }}
 
