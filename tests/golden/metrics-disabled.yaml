@@ -27,6 +27,10 @@ spec:
         app.kubernetes.io/component: controller
     spec:
       serviceAccountName: golden-nasty-csi-controller
+      securityContext:
+        fsGroup: 0
+        runAsNonRoot: false
+        runAsUser: 0
       priorityClassName: system-cluster-critical
       containers:
         # NASty CSI Controller
@@ -75,7 +79,6 @@ spec:
             requests:
               cpu: 10m
               memory: 20Mi
-
         # CSI Provisioner sidecar
         - name: csi-provisioner
           image: "registry.k8s.io/sig-storage/csi-provisioner:v6.1.0"
@@ -113,7 +116,6 @@ spec:
             requests:
               cpu: 10m
               memory: 40Mi
-
         # CSI Attacher sidecar
         - name: csi-attacher
           image: "registry.k8s.io/sig-storage/csi-attacher:v4.10.0"
@@ -138,7 +140,6 @@ spec:
             requests:
               cpu: 10m
               memory: 40Mi
-
         # CSI Resizer sidecar
         - name: csi-resizer
           image: "registry.k8s.io/sig-storage/csi-resizer:v2.0.0"
@@ -165,7 +166,6 @@ spec:
             requests:
               cpu: 10m
               memory: 40Mi
-
         # CSI Liveness Probe sidecar
         - name: liveness-probe
           image: "registry.k8s.io/sig-storage/livenessprobe:v2.14.0"
@@ -186,7 +186,6 @@ spec:
             requests:
               cpu: 10m
               memory: 20Mi
-
       volumes:
         - name: socket-dir
           emptyDir: {}

@@ -22,7 +22,7 @@ spec:
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: custom-nfs
+  name: upgraded-nfs
   labels:
     helm.sh/chart: nasty-csi-driver-VERSION
     app.kubernetes.io/name: nasty-csi-driver
@@ -34,7 +34,7 @@ parameters:
   protocol: "nfs"
   filesystem: "tank"
   server: "192.0.2.10"
-allowVolumeExpansion: true
+allowVolumeExpansion: false
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
 ---
@@ -43,7 +43,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: golden-nasty-csi-node
-  namespace: golden-system
+  namespace: kube-system
   labels:
     helm.sh/chart: nasty-csi-driver-VERSION
     app.kubernetes.io/name: nasty-csi-driver
@@ -233,7 +233,7 @@ spec:
 apiVersion: snapshot.storage.k8s.io/v1
 kind: VolumeSnapshotClass
 metadata:
-  name: custom-nfs-snapshot
+  name: upgraded-nfs-snapshot
   labels:
     helm.sh/chart: nasty-csi-driver-VERSION
     app.kubernetes.io/name: nasty-csi-driver

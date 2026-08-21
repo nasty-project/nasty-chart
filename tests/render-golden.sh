@@ -17,7 +17,7 @@ render_case() {
     | sed -E \
         -e 's/(helm.sh\/chart: nasty-csi-driver-).*/\1VERSION/' \
         -e 's/(app.kubernetes.io\/version: ).*/\1"VERSION"/' \
-    | awk 'NF { while (blank > 0) { print ""; blank-- } print; next } { blank++ }' \
+    | awk 'NF { print }' \
         >"$actual_dir/$name.yaml"
 
   if [[ ${UPDATE_GOLDEN:-0} == 1 ]]; then
@@ -51,6 +51,7 @@ assert_namespace() {
     --values "$repo_root/tests/cases/release-namespace.yaml" \
     --set controller.dashboard.enabled=true \
     --set controller.dashboard.ingress.enabled=true \
+    --set-string controller.dashboard.filesystem=dashboard-tank \
     --set controller.metrics.serviceMonitor.enabled=true \
     --set grafana.dashboards.enabled=true \
     --set openshift.enabled=true \
@@ -63,6 +64,10 @@ assert_namespace() {
       | grep -Ev "namespace: \"?$expected\"?$|system:serviceaccount:$expected:"); then
     echo "rendered resources outside the expected namespace $expected:" >&2
     echo "$invalid" >&2
+    exit 1
+  fi
+  if ! grep -q -- '--dashboard-filesystem=dashboard-tank' "$output"; then
+    echo "controller.dashboard.filesystem was not rendered" >&2
     exit 1
   fi
 }
@@ -92,3 +97,43 @@ fi
 
 render_case all-protocols \
   --show-only templates/storageclass.yaml
+
+render_case upgrade-compatibility \
+  --is-upgrade \
+  --show-only templates/csidriver.yaml \
+  --show-only templates/storageclass.yaml \
+  --show-only templates/node.yaml \
+  --show-only templates/volumesnapshotclass.yaml
+
+if grep -q 'legacy.example.com' "$actual_dir/upgrade-compatibility.yaml"; then
+  echo "upgrade-compatibility used the legacy driverName value" >&2
+  exit 1
+fi
+if ! grep -qx 'provisioner: storage.example.com' "$actual_dir/upgrade-compatibility.yaml"; then
+  echo "upgrade-compatibility did not preserve csiDriverName" >&2
+  exit 1
+fi
+if ! grep -qx 'allowVolumeExpansion: false' "$actual_dir/upgrade-compatibility.yaml"; then
+  echo "upgrade-compatibility did not preserve allowVolumeExpansion=false" >&2
+  exit 1
+fi
+if ! grep -qx '  namespace: kube-system' "$actual_dir/upgrade-compatibility.yaml"; then
+  echo "upgrade-compatibility did not preserve the explicit namespace" >&2
+  exit 1
+fi
+
+helm template install-matrix "$repo_root" \
+  --namespace golden-system \
+  --values "$repo_root/tests/cases/all-protocols.yaml" \
+  >/dev/null
+
+upgrade_output="$actual_dir/upgrade-compatibility-all.yaml"
+helm template upgrade-matrix "$repo_root" \
+  --namespace golden-system \
+  --is-upgrade \
+  --values "$repo_root/tests/cases/upgrade-compatibility.yaml" \
+  >"$upgrade_output"
+if grep -Eq -- '--metrics-addr|name: upgrade-matrix-nasty-csi-metrics|kind: ServiceMonitor' "$upgrade_output"; then
+  echo "upgrade-compatibility re-enabled metrics" >&2
+  exit 1
+fi
