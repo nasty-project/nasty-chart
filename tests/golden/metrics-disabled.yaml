@@ -1,0 +1,192 @@
+---
+# Source: nasty-csi-driver/templates/controller.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: golden-nasty-csi-controller
+  namespace: kube-system
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nasty-csi-driver
+      app.kubernetes.io/instance: golden
+      app.kubernetes.io/component: controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nasty-csi-driver
+        app.kubernetes.io/instance: golden
+        app.kubernetes.io/component: controller
+    spec:
+      serviceAccountName: golden-nasty-csi-controller
+      priorityClassName: system-cluster-critical
+      containers:
+        # NASty CSI Controller
+        - name: nasty-csi-plugin
+          image: "bfenski/nasty-csi:GOLDEN"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--endpoint=unix:///var/lib/csi/sockets/pluginproxy/csi.sock"
+            - "--api-url=$(NASTY_URL)"
+            - "--api-key=$(NASTY_API_KEY)"
+            - "--v=2"
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NASTY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: nasty-credentials
+                  key: url
+            - name: NASTY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nasty-credentials
+                  key: api-key
+          ports:
+            - name: healthz
+              containerPort: 9808
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+
+        # CSI Provisioner sidecar
+        - name: csi-provisioner
+          image: "registry.k8s.io/sig-storage/csi-provisioner:v6.1.0"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--v=2"
+            - "--timeout=120s"
+            - "--leader-election-lease-duration=30s"
+            - "--leader-election-renew-deadline=20s"
+            - "--leader-election-retry-period=5s"
+            - "--leader-election"
+            - "--default-fstype=nfs"
+            - "--extra-create-metadata"
+            - "--enable-capacity"
+            - "--capacity-ownerref-level=2"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+          resources:
+            limits:
+              cpu: 300m
+              memory: 300Mi
+            requests:
+              cpu: 10m
+              memory: 40Mi
+
+        # CSI Attacher sidecar
+        - name: csi-attacher
+          image: "registry.k8s.io/sig-storage/csi-attacher:v4.10.0"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--v=2"
+            - "--leader-election"
+            - "--leader-election-lease-duration=30s"
+            - "--leader-election-renew-deadline=20s"
+            - "--leader-election-retry-period=5s"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+          resources:
+            limits:
+              cpu: 300m
+              memory: 300Mi
+            requests:
+              cpu: 10m
+              memory: 40Mi
+
+        # CSI Resizer sidecar
+        - name: csi-resizer
+          image: "registry.k8s.io/sig-storage/csi-resizer:v2.0.0"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--v=2"
+            - "--leader-election"
+            - "--timeout=120s"
+            - "--leader-election-lease-duration=30s"
+            - "--leader-election-renew-deadline=20s"
+            - "--leader-election-retry-period=5s"
+            - "--handle-volume-inuse-error=true"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+          resources:
+            limits:
+              cpu: 300m
+              memory: 300Mi
+            requests:
+              cpu: 10m
+              memory: 40Mi
+
+        # CSI Liveness Probe sidecar
+        - name: liveness-probe
+          image: "registry.k8s.io/sig-storage/livenessprobe:v2.14.0"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--csi-address=$(ADDRESS)"
+            - "--health-port=9808"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+
+      volumes:
+        - name: socket-dir
+          emptyDir: {}

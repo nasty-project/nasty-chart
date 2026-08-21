@@ -1,0 +1,14 @@
+nasty:
+  existingSecret: nasty-credentials
+
+csiDriverName: storage.example.com
+
+snapshots:
+  enabled: true
+
+storageClasses:
+  - name: custom-nfs
+    enabled: true
+    protocol: nfs
+    filesystem: tank
+    server: 192.0.2.10

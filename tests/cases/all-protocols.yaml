@@ -1,0 +1,32 @@
+nasty:
+  existingSecret: nasty-credentials
+
+storageClasses:
+  - name: protocol-nfs
+    enabled: true
+    protocol: nfs
+    filesystem: tank
+    server: 192.0.2.10
+  - name: protocol-nvmeof
+    enabled: true
+    protocol: nvmeof
+    filesystem: tank
+    server: 192.0.2.10
+    transport: tcp
+    port: "4420"
+    fsType: xfs
+  - name: protocol-iscsi
+    enabled: true
+    protocol: iscsi
+    filesystem: tank
+    server: 192.0.2.10
+    port: "3260"
+    fsType: ext4
+  - name: protocol-smb
+    enabled: true
+    protocol: smb
+    filesystem: tank
+    server: 192.0.2.10
+    smbCredentialsSecret:
+      name: smb-credentials
+      namespace: storage-secrets

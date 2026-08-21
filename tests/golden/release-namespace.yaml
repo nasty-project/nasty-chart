@@ -1,0 +1,44 @@
+---
+# Source: nasty-csi-driver/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: golden-nasty-csi-secret
+  namespace: kube-system
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+stringData:
+  url: "wss://nasty.example.test/ws"
+  api-key: "test-api-key"
+
+
+---
+# Source: nasty-csi-driver/templates/metrics-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: golden-nasty-csi-metrics
+  namespace: kube-system
+  labels:
+    helm.sh/chart: nasty-csi-driver-VERSION
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/version: "VERSION"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: controller
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: nasty-csi-driver
+    app.kubernetes.io/instance: golden
+    app.kubernetes.io/component: controller
