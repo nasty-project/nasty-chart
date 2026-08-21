@@ -4,7 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: golden-nasty-csi-controller
-  namespace: kube-system
+  namespace: golden-system
   labels:
     helm.sh/chart: nasty-csi-driver-VERSION
     app.kubernetes.io/name: nasty-csi-driver

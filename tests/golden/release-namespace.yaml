@@ -4,7 +4,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: golden-nasty-csi-secret
-  namespace: kube-system
+  namespace: golden-system
   labels:
     helm.sh/chart: nasty-csi-driver-VERSION
     app.kubernetes.io/name: nasty-csi-driver
@@ -23,7 +23,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: golden-nasty-csi-metrics
-  namespace: kube-system
+  namespace: golden-system
   labels:
     helm.sh/chart: nasty-csi-driver-VERSION
     app.kubernetes.io/name: nasty-csi-driver

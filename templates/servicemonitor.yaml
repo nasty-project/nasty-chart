@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "nasty-csi-driver.fullname" . }}
-  namespace: {{ default .Values.namespace .Values.controller.metrics.serviceMonitor.namespace }}
+  namespace: {{ default (include "nasty-csi-driver.namespace" .) .Values.controller.metrics.serviceMonitor.namespace }}
   labels:
     {{- include "nasty-csi-driver.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
@@ -21,7 +21,7 @@ spec:
       app.kubernetes.io/component: controller
   namespaceSelector:
     matchNames:
-      - {{ .Values.namespace }}
+      - {{ include "nasty-csi-driver.namespace" . }}
   endpoints:
     - port: metrics
       {{- if .Values.controller.metrics.serviceMonitor.interval }}

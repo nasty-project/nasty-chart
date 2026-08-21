@@ -14,8 +14,8 @@ regenerate the snapshots explicitly:
 UPDATE_GOLDEN=1 tests/render-golden.sh
 ```
 
-The `custom-driver`, `release-namespace`, and `explicit-false` snapshots capture
-known wiring inconsistencies in the current chart. Follow-up fixes should add
-the intended assertion or update the relevant golden in the same change. Chart
-and app versions are normalized so release-only version bumps do not churn the
+The `custom-driver`, `release-namespace`, and `explicit-false` cases also make
+semantic assertions for value wiring that must not regress. Namespace checks
+cover both the Helm release namespace and an explicit chart override. Chart and
+app versions are normalized so release-only version bumps do not churn the
 snapshots.

@@ -31,7 +31,7 @@ metadata:
     app.kubernetes.io/instance: golden
     app.kubernetes.io/version: "VERSION"
     app.kubernetes.io/managed-by: Helm
-provisioner: nasty.csi.io
+provisioner: storage.example.com
 parameters:
   protocol: "nfs"
   filesystem: "tank"
@@ -48,7 +48,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: golden-nasty-csi-node
-  namespace: kube-system
+  namespace: golden-system
   labels:
     helm.sh/chart: nasty-csi-driver-VERSION
     app.kubernetes.io/name: nasty-csi-driver

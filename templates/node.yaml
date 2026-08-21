@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: {{ include "nasty-csi-driver.fullname" . }}-node
-  namespace: {{ .Values.namespace }}
+  namespace: {{ include "nasty-csi-driver.namespace" . }}
   labels:
     {{- include "nasty-csi-driver.labels" . | nindent 4 }}
     app.kubernetes.io/component: node
@@ -134,7 +134,7 @@ spec:
             - name: ADDRESS
               value: /csi/csi.sock
             - name: DRIVER_REG_SOCK_PATH
-              value: {{ .Values.node.kubeletPath }}/plugins/{{ .Values.csiDriverName }}/csi.sock
+              value: {{ .Values.node.kubeletPath }}/plugins/{{ include "nasty-csi-driver.driverName" . }}/csi.sock
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
@@ -162,7 +162,7 @@ spec:
       volumes:
         - name: plugin-dir
           hostPath:
-            path: {{ .Values.node.kubeletPath }}/plugins/{{ .Values.csiDriverName }}
+            path: {{ .Values.node.kubeletPath }}/plugins/{{ include "nasty-csi-driver.driverName" . }}
             type: DirectoryOrCreate
         - name: registration-dir
           hostPath:
