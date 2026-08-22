@@ -7,11 +7,11 @@ type: application
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.0.9
+version: 0.0.10
 
 # CSI application version deployed by this chart. It is independent of the
 # chart version and changes only when the chart adopts another CSI release.
-appVersion: "v0.0.9"
+appVersion: "v0.0.10"
 
 keywords:
   - storage
