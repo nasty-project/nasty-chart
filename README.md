@@ -37,6 +37,12 @@ helm install nasty-csi oci://ghcr.io/nasty-project/charts/nasty-csi-driver \
   --set storageClasses[0].server="YOUR-NASTY-IP"
 ```
 
+## Upgrading to CSI v0.0.12
+
+Chart 0.0.11 defaults to CSI v0.0.12 unless `image.tag` is overridden. Chart and driver versions are independent.
+
+CSI v0.0.12 moves volume health reporting to the CSI 1.13 alpha `ControllerGetVolumeHealth` and `NodeGetVolumeHealth` RPCs. The legacy `VolumeCondition` fields are no longer returned by volume info/stats RPCs; older health-monitor consumers need compatible client support. Normal volume operations are unaffected by this health API change.
+
 ## Configuration
 
 ### Connection
