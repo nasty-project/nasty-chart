@@ -60,6 +60,15 @@ assert_namespace() {
     "$@" \
     >"$output"
 
+  if grep -q -- '--api-key' "$output"; then
+    echo "API credential must not be passed in process arguments" >&2
+    exit 1
+  fi
+  if [[ $(grep -c 'name: NASTY_API_KEY' "$output") != 2 ]]; then
+    echo "controller and node must receive the API credential via environment" >&2
+    exit 1
+  fi
+
   if invalid=$(grep -E '(^[[:space:]]+namespace: |system:serviceaccount:)' "$output" \
       | grep -Ev "namespace: \"?$expected\"?$|system:serviceaccount:$expected:"); then
     echo "rendered resources outside the expected namespace $expected:" >&2

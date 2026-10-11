@@ -40,7 +40,6 @@ spec:
           args:
             - "--endpoint=unix:///var/lib/csi/sockets/pluginproxy/csi.sock"
             - "--api-url=$(NASTY_URL)"
-            - "--api-key=$(NASTY_API_KEY)"
             - "--v=2"
           env:
             - name: NODE_ID

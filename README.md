@@ -54,6 +54,13 @@ CSI v0.0.12 moves volume health reporting to the CSI 1.13 alpha `ControllerGetVo
 | `nasty.existingSecret` | Existing Secret with `url` and `api-key` keys | `""` |
 | `nasty.skipTLSVerify` | Skip TLS verification (self-signed certs) | `false` |
 
+The controller and node pass the API credential through `NASTY_API_KEY`, not
+command-line arguments. This requires a CSI image with environment credential
+support; older images that require `--api-key` are incompatible with this change.
+Environment credentials are still secrets: restrict access to pod specifications,
+exec/debug facilities and the Kubernetes Secret. This does not make them anonymous
+or inaccessible to privileged processes.
+
 ### Storage Classes
 
 Each entry in `storageClasses` creates a Kubernetes StorageClass. Multiple entries per protocol are supported.
