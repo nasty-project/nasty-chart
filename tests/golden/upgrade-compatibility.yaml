@@ -82,7 +82,6 @@ spec:
             - "--endpoint=unix:///csi/csi.sock"
             - "--node-id=$(NODE_ID)"
             - "--api-url=$(NASTY_URL)"
-            - "--api-key=$(NASTY_API_KEY)"
             - "--v=2"
             - "--max-concurrent-nvme-connects=5"
           env:

@@ -37,7 +37,20 @@ helm install nasty-csi oci://ghcr.io/nasty-project/charts/nasty-csi-driver \
   --set storageClasses[0].server="YOUR-NASTY-IP"
 ```
 
-## Upgrading to CSI v0.0.12
+## Upgrading to chart 0.0.12 / CSI v0.0.13
+
+Chart 0.0.12 defaults to CSI v0.0.13. It passes the NASty API key through
+Secret-backed `NASTY_API_KEY` environment variables rather than driver process
+arguments. Do not override this chart to CSI v0.0.12 or older: those images do not
+support this credential path. Wait for the v0.0.13 image to be published before
+deploying this chart.
+
+CSI v0.0.13 includes strict deletion ownership checks and uncertain RPC outcome
+handling. Existing unowned/incompletely initialized storage is not automatically
+adopted or deleted; review ownership explicitly if deletion fails closed. These
+changes do not make provisioning crash-atomic.
+
+### Previous CSI v0.0.12 health API change
 
 Chart 0.0.11 defaults to CSI v0.0.12 unless `image.tag` is overridden. Chart and driver versions are independent.
 
@@ -53,6 +66,13 @@ CSI v0.0.12 moves volume health reporting to the CSI 1.13 alpha `ControllerGetVo
 | `nasty.apiKey` | API key from NASty Settings | `""` (required) |
 | `nasty.existingSecret` | Existing Secret with `url` and `api-key` keys | `""` |
 | `nasty.skipTLSVerify` | Skip TLS verification (self-signed certs) | `false` |
+
+The controller and node pass the API credential through `NASTY_API_KEY`, not
+command-line arguments. This requires a CSI image with environment credential
+support; older images that require `--api-key` are incompatible with this change.
+Environment credentials are still secrets: restrict access to pod specifications,
+exec/debug facilities and the Kubernetes Secret. This does not make them anonymous
+or inaccessible to privileged processes.
 
 ### Storage Classes
 

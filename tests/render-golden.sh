@@ -5,6 +5,15 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 actual_dir=$(mktemp -d)
 trap 'rm -rf "$actual_dir"' EXIT
 
+# Golden cases override the tag, so also exercise the actual release default.
+app_version=$(helm show chart "$repo_root" | awk '$1 == "appVersion:" { gsub(/"/, "", $2); print $2 }')
+helm template golden "$repo_root" --values "$repo_root/tests/cases/all-protocols.yaml" \
+  >"$actual_dir/default-image.yaml"
+if [[ $(grep -Fc "image: \"bfenski/nasty-csi:$app_version\"" "$actual_dir/default-image.yaml") != 2 ]]; then
+  echo "controller and node must default to the chart appVersion image" >&2
+  exit 1
+fi
+
 render_case() {
   local name=$1
   shift
@@ -59,6 +68,15 @@ assert_namespace() {
     --set-string 'storageClasses[0].smbCredentialsSecret.name=smb-credentials' \
     "$@" \
     >"$output"
+
+  if grep -q -- '--api-key' "$output"; then
+    echo "API credential must not be passed in process arguments" >&2
+    exit 1
+  fi
+  if [[ $(grep -c 'name: NASTY_API_KEY' "$output") != 2 ]]; then
+    echo "controller and node must receive the API credential via environment" >&2
+    exit 1
+  fi
 
   if invalid=$(grep -E '(^[[:space:]]+namespace: |system:serviceaccount:)' "$output" \
       | grep -Ev "namespace: \"?$expected\"?$|system:serviceaccount:$expected:"); then
