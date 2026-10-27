@@ -11,7 +11,7 @@ version: 0.0.12
 
 # CSI application version deployed by this chart. It is independent of the
 # chart version and changes only when the chart adopts another CSI release.
-appVersion: "v0.0.13"
+appVersion: "v0.0.14"
 
 keywords:
   - storage

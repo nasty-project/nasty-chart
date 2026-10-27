@@ -37,18 +37,22 @@ helm install nasty-csi oci://ghcr.io/nasty-project/charts/nasty-csi-driver \
   --set storageClasses[0].server="YOUR-NASTY-IP"
 ```
 
-## Upgrading to chart 0.0.12 / CSI v0.0.13
+## Upgrading to chart 0.0.12 / CSI v0.0.14
 
-Chart 0.0.12 defaults to CSI v0.0.13. It passes the NASty API key through
+Chart 0.0.12 defaults to CSI v0.0.14. It passes the NASty API key through
 Secret-backed `NASTY_API_KEY` environment variables rather than driver process
 arguments. Do not override this chart to CSI v0.0.12 or older: those images do not
-support this credential path. Wait for the v0.0.13 image to be published before
+support this credential path. Wait for the v0.0.14 image to be published before
 deploying this chart.
 
 CSI v0.0.13 includes strict deletion ownership checks and uncertain RPC outcome
 handling. Existing unowned/incompletely initialized storage is not automatically
 adopted or deleted; review ownership explicitly if deletion fails closed. These
 changes do not make provisioning crash-atomic.
+
+CSI v0.0.14 refills the `nasty_csi_volume_capacity_bytes` metric when the
+controller starts, so capacity graphs survive controller restarts. Its image runs
+on Alpine 3.24 with a refreshed CA bundle and is built with Go 1.27.3.
 
 ### Previous CSI v0.0.12 health API change
 
