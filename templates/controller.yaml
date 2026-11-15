@@ -44,6 +44,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "--endpoint=unix:///var/lib/csi/sockets/pluginproxy/csi.sock"
+            - "--driver-name={{ include "nasty-csi-driver.driverName" . }}"
             - "--api-url=$(NASTY_URL)"
             - "--v={{ .Values.controller.logLevel }}"
             {{- if .Values.nasty.skipTLSVerify }}

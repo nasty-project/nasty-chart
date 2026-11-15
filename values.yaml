@@ -161,6 +161,10 @@ node:
   # Enable debug mode (sets DEBUG_CSI=true, equivalent to logLevel 4+)
   debug: false
 
+  # Host port of the node plugin's /healthz endpoint. The node plugin uses the
+  # host network, so change it when running a second release on the same nodes.
+  healthPort: 9808
+
   # Resource requests and limits for node plugin
   resources:
     requests:

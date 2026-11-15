@@ -39,6 +39,7 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - "--endpoint=unix:///var/lib/csi/sockets/pluginproxy/csi.sock"
+            - "--driver-name=nasty.csi.io"
             - "--api-url=$(NASTY_URL)"
             - "--v=2"
           env:
