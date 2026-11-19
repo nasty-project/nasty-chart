@@ -81,6 +81,7 @@ spec:
           args:
             - "--endpoint=unix:///csi/csi.sock"
             - "--node-id=$(NODE_ID)"
+            - "--driver-name=storage.example.com"
             - "--api-url=$(NASTY_URL)"
             - "--v=2"
             - "--max-concurrent-nvme-connects=5"
@@ -129,8 +130,6 @@ spec:
               mountPath: /dev
             - name: sys-dir
               mountPath: /sys
-            - name: registry-dir
-              mountPath: /var/lib/nasty-csi
             # iSCSI requires access to host iscsid socket and configuration
             - name: run-dir
               mountPath: /run
@@ -213,10 +212,6 @@ spec:
           hostPath:
             path: /sys
             type: Directory
-        - name: registry-dir
-          hostPath:
-            path: /var/lib/nasty-csi
-            type: DirectoryOrCreate
         # iSCSI: host run directory for iscsid socket
         - name: run-dir
           hostPath:

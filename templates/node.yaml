@@ -51,6 +51,7 @@ spec:
           args:
             - "--endpoint=unix:///csi/csi.sock"
             - "--node-id=$(NODE_ID)"
+            - "--driver-name={{ include "nasty-csi-driver.driverName" . }}"
             - "--api-url=$(NASTY_URL)"
             - "--v={{ .Values.node.logLevel }}"
             {{- if .Values.nasty.skipTLSVerify }}
@@ -81,7 +82,7 @@ spec:
             {{- end }}
           ports:
             - name: healthz
-              containerPort: 9808
+              containerPort: {{ .Values.node.healthPort | default 9808 }}
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -109,8 +110,6 @@ spec:
               mountPath: /dev
             - name: sys-dir
               mountPath: /sys
-            - name: registry-dir
-              mountPath: /var/lib/nasty-csi
             {{- if .Values.node.protocols.iscsi }}
             # iSCSI requires access to host iscsid socket and configuration
             - name: run-dir
@@ -148,7 +147,7 @@ spec:
           imagePullPolicy: {{ .Values.sidecars.livenessprobe.image.pullPolicy }}
           args:
             - "--csi-address=$(ADDRESS)"
-            - "--health-port=9808"
+            - "--health-port={{ .Values.node.healthPort | default 9808 }}"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -183,10 +182,6 @@ spec:
           hostPath:
             path: /sys
             type: Directory
-        - name: registry-dir
-          hostPath:
-            path: /var/lib/nasty-csi
-            type: DirectoryOrCreate
         {{- if .Values.node.protocols.iscsi }}
         # iSCSI: host run directory for iscsid socket
         - name: run-dir
