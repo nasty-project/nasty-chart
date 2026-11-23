@@ -76,7 +76,7 @@ spec:
       containers:
         # NASty CSI Node Plugin
         - name: nasty-csi-plugin
-          image: "bfenski/nasty-csi:GOLDEN"
+          image: "docker.io/bfenski/nasty-csi:GOLDEN"
           imagePullPolicy: IfNotPresent
           args:
             - "--endpoint=unix:///csi/csi.sock"

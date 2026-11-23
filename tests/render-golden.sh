@@ -9,7 +9,7 @@ trap 'rm -rf "$actual_dir"' EXIT
 app_version=$(helm show chart "$repo_root" | awk '$1 == "appVersion:" { gsub(/"/, "", $2); print $2 }')
 helm template golden "$repo_root" --values "$repo_root/tests/cases/all-protocols.yaml" \
   >"$actual_dir/default-image.yaml"
-if [[ $(grep -Fc "image: \"bfenski/nasty-csi:$app_version\"" "$actual_dir/default-image.yaml") != 2 ]]; then
+if [[ $(grep -Fc "image: \"docker.io/bfenski/nasty-csi:$app_version\"" "$actual_dir/default-image.yaml") != 2 ]]; then
   echo "controller and node must default to the chart appVersion image" >&2
   exit 1
 fi

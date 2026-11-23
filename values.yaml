@@ -25,7 +25,7 @@ nasty:
 
 # Image configuration
 image:
-  repository: bfenski/nasty-csi
+  repository: docker.io/bfenski/nasty-csi
   pullPolicy: IfNotPresent
   # Image tag to use. If empty, defaults to the chart's appVersion.
   # For production, either:

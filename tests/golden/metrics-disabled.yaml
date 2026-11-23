@@ -35,7 +35,7 @@ spec:
       containers:
         # NASty CSI Controller
         - name: nasty-csi-plugin
-          image: "bfenski/nasty-csi:GOLDEN"
+          image: "docker.io/bfenski/nasty-csi:GOLDEN"
           imagePullPolicy: IfNotPresent
           args:
             - "--endpoint=unix:///var/lib/csi/sockets/pluginproxy/csi.sock"
